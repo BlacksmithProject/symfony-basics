@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  php:
+    container_name: php
+    build:
+      context: ./
+      target: php
+    ports:
+      - "9003:9003"
+    volumes:
+      - .:/var/www/html/
+      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    depends_on:
+      - db
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  nginx:
+    container_name: nginx
+    image: bitnami/nginx:1.19-debian-10
+    ports:
+      - "8092:8080"
+    volumes:
+      - ./docker/app.conf:/opt/bitnami/nginx/conf/server_blocks/app.conf
+      - .:/var/www/html/
+    depends_on:
+      - php
+
+  db:
+    container_name: postgres
+    image: postgres:13
+    ports:
+      - "5532:5432"
+    environment:
+      - POSTGRES_DB=app
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - data:/var/lib/postgresql/data
+
+volumes:
+  data:
